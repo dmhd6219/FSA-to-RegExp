@@ -84,6 +84,8 @@ class FSA {
 
         isDisjoint();
         isDeterministic();
+
+        toRegExp();
     }
 
     /**
@@ -172,7 +174,7 @@ class FSA {
      * @throws FSAException the FSA Exception
      */
     private void processInitState(String s) throws FSAException {
-        if (!s.startsWith("init.st=[") || !s.endsWith("]")) {
+        if (!s.startsWith("initial=[") || !s.endsWith("]")) {
             throw new FSAException(Errors.E0.getValue());
         }
 
@@ -203,11 +205,11 @@ class FSA {
      * @throws FSAException the FSA Exception
      */
     private void processFinalState(String s) throws FSAException {
-        if (!s.startsWith("fin.st=[") || !s.endsWith("]")) {
+        if (!s.startsWith("accepting=[") || !s.endsWith("]")) {
             throw new FSAException(Errors.E0.getValue());
         }
 
-        String[] finalStates = s.substring(8, s.length() - 1).split(",");
+        String[] finalStates = s.substring(11, s.length() - 1).split(",");
         for (String state : finalStates) {
             if (state.length() == 0) {
                 continue;
@@ -332,43 +334,95 @@ class FSA {
         return visited;
     }
 
-    private ArrayList<ArrayList<String>> getInitialRegExp(){
+    private ArrayList<ArrayList<String>> getInitialRegExp() {
         ArrayList<ArrayList<String>> initRegExp = new ArrayList<>(this.states.size());
 
-        for (int i = 0; i < this.states.size(); i++){
+        for (int i = 0; i < this.states.size(); i++) {
+            initRegExp.add(new ArrayList<String>());
+            for (int j = 0; j < this.states.size(); j++) {
+                initRegExp.get(i).add("");
+            }
+        }
+
+        for (int i = 0; i < this.states.size(); i++) {
             String state = this.states.get(i);
 
-            for (int j = 0; j < this.states.size(); j++){
+            for (int j = 0; j < this.states.size(); j++) {
                 String newState = this.states.get(j);
                 String regExp = "";
 
-                for (String[] trans : this.transitions){
-                    if (trans[0].equals(state) && trans[2].equals(newState)){
+                for (String[] trans : this.transitions) {
+                    if (trans[0].equals(state) && trans[2].equals(newState)) {
                         regExp += trans[1] + "|";
                     }
                 }
 
-                if (state.equals(newState)){
+                if (state.equals(newState)) {
                     regExp += "eps";
                 }
 
-                if (regExp.equals("")){
+                if (regExp.equals("")) {
                     regExp = "{}";
                 }
 
-                if (regExp.charAt(regExp.length() - 1) == '|'){
+                if (regExp.charAt(regExp.length() - 1) == '|') {
                     regExp = regExp.substring(0, regExp.length() - 1);
                 }
 
-                initRegExp.get(i).add(j, regExp);
+                initRegExp.get(i)
+                        .set(j, regExp);
             }
         }
 
         return initRegExp;
     }
 
-    public void toRegExp(){
+    private ArrayList<Integer> getFinalStatesIndices() {
+        ArrayList<Integer> ans = new ArrayList<>();
+        for (int i = 0; i < this.states.size(); i++) {
+            if (this.finalStates.contains(this.states.get(i))) {
+                ans.add(i);
+            }
+        }
+        return ans;
+    }
+
+    public void toRegExp() {
         ArrayList<ArrayList<String>> regExp = this.getInitialRegExp();
+        ArrayList<Integer> finalStatesIndices = this.getFinalStatesIndices();
+
+        for (int k = 0; k < this.states.size(); k++) {
+            ArrayList<ArrayList<String>> newRegExp = new ArrayList<>(this.states.size());
+
+            for (int i = 0; i < this.states.size(); i++) {
+                newRegExp.add(new ArrayList<String>());
+                for (int j = 0; j < this.states.size(); j++) {
+                    newRegExp.get(i).add("");
+                }
+            }
+
+            for (int i = 0; i < this.states.size(); i++) {
+                for (int j = 0; j < this.states.size(); j++) {
+                    newRegExp.get(i).set(j, String.format("(%s)(%s)*(%s)|(%s)", regExp.get(i).get(k), regExp.get(k).get(k), regExp.get(k).get(j), regExp.get(i).get(j)));
+
+                }
+            }
+
+            regExp = newRegExp;
+        }
+
+        String resultNewRegExp = "";
+        for (int i : finalStatesIndices) {
+            resultNewRegExp += regExp.get(0).get(i) + "|";
+        }
+
+        String ans = "";
+        if (resultNewRegExp.equals("")) {
+            ans = "{}";
+        } else {
+            ans = resultNewRegExp.substring(0, resultNewRegExp.length() - 1);
+        }
+        System.out.println(ans);
     }
 }
 
