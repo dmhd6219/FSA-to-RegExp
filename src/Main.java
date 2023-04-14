@@ -24,6 +24,8 @@ public class Main {
 
         try {
             FSA fsa = new FSA(s);
+            bw.write(fsa.toRegExp());
+            bw.write("\n");
 
         } catch (FSAException e) {
             bw.write("Error:\n");
@@ -334,15 +336,8 @@ class FSA {
         return visited;
     }
 
-    private ArrayList<ArrayList<String>> getInitialRegExp() {
-        ArrayList<ArrayList<String>> initRegExp = new ArrayList<>(this.states.size());
-
-        for (int i = 0; i < this.states.size(); i++) {
-            initRegExp.add(new ArrayList<String>());
-            for (int j = 0; j < this.states.size(); j++) {
-                initRegExp.get(i).add("");
-            }
-        }
+    private String[][] getInitialRegExp() {
+        String[][] initRegExp = new String[this.states.size()][this.states.size()];
 
         for (int i = 0; i < this.states.size(); i++) {
             String state = this.states.get(i);
@@ -369,8 +364,7 @@ class FSA {
                     regExp = regExp.substring(0, regExp.length() - 1);
                 }
 
-                initRegExp.get(i)
-                        .set(j, regExp);
+                initRegExp[i][j] = regExp;
             }
         }
 
@@ -387,23 +381,18 @@ class FSA {
         return ans;
     }
 
-    public void toRegExp() {
-        ArrayList<ArrayList<String>> regExp = this.getInitialRegExp();
+    public String toRegExp() {
+        String[][] regExp = this.getInitialRegExp();
         ArrayList<Integer> finalStatesIndices = this.getFinalStatesIndices();
 
         for (int k = 0; k < this.states.size(); k++) {
-            ArrayList<ArrayList<String>> newRegExp = new ArrayList<>(this.states.size());
+            String[][] newRegExp = new String[this.states.size()][this.states.size()];
 
-            for (int i = 0; i < this.states.size(); i++) {
-                newRegExp.add(new ArrayList<String>());
-                for (int j = 0; j < this.states.size(); j++) {
-                    newRegExp.get(i).add("");
-                }
-            }
 
             for (int i = 0; i < this.states.size(); i++) {
                 for (int j = 0; j < this.states.size(); j++) {
-                    newRegExp.get(i).set(j, String.format("(%s)(%s)*(%s)|(%s)", regExp.get(i).get(k), regExp.get(k).get(k), regExp.get(k).get(j), regExp.get(i).get(j)));
+                    newRegExp[i][j] = String.format("(%s)(%s)*(%s)|(%s)", regExp[i][k],
+                            regExp[k][k], regExp[k][j], regExp[i][j]);
 
                 }
             }
@@ -413,7 +402,7 @@ class FSA {
 
         String resultNewRegExp = "";
         for (int i : finalStatesIndices) {
-            resultNewRegExp += regExp.get(0).get(i) + "|";
+            resultNewRegExp += regExp[0][i] + "|";
         }
 
         String ans = "";
@@ -422,7 +411,7 @@ class FSA {
         } else {
             ans = resultNewRegExp.substring(0, resultNewRegExp.length() - 1);
         }
-        System.out.println(ans);
+        return ans;
     }
 }
 
