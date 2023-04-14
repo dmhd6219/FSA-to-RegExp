@@ -334,6 +334,11 @@ class FSA {
         return visited;
     }
 
+    /**
+     * Gets initial Regular Expressions.
+     *
+     * @return array with initial regular expressions
+     */
     private String[][] getInitialRegExp() {
         String[][] initRegExp = new String[this.states.size()][this.states.size()];
 
@@ -369,6 +374,11 @@ class FSA {
         return initRegExp;
     }
 
+    /**
+     * Gets Indexes of Accepting States in List of all States.
+     *
+     * @return List of Indexes of Accepting States in List of all States
+     */
     private ArrayList<Integer> getFinalStatesIndices() {
         ArrayList<Integer> ans = new ArrayList<>();
         for (int i = 0; i < this.states.size(); i++) {
@@ -379,6 +389,11 @@ class FSA {
         return ans;
     }
 
+    /**
+     * Gets Regular Expression from this FSA.
+     *
+     * @return Regular Expression from this FSA
+     */
     public String toRegExp() {
         String[][] regExp = this.getInitialRegExp();
         ArrayList<Integer> finalStatesIndices = this.getFinalStatesIndices();
