@@ -79,13 +79,11 @@ class FSA {
     HashSet<String> warnings = new HashSet<>();
     /**
      * The Undirected graph.
-     *
      * key : state, value : child states
      */
     HashMap<String, HashSet<String>> undirectedGraph = new HashMap<>();
     /**
      * The Directed graph.
-     *
      * key : state, value : {key : transition, value : child states}
      */
     HashMap<String, HashMap<String, HashSet>> directedGraph = new HashMap<>();
