@@ -72,7 +72,7 @@ class FSA {
      * The Directed graph.
      * key : state, value : {key : transition, value : child states}
      */
-    HashMap<String, HashMap<String, HashSet>> directedGraph = new HashMap<>();
+    HashMap<String, HashMap<String, HashSet<String>>> directedGraph = new HashMap<>();
 
 
     /**
@@ -307,11 +307,9 @@ class FSA {
 
     /**
      * Checks if this {@link FSA} is deterministic.
-     *
-     * @return {@code true} if this {@link FSA} is deterministic, otherwise {@code false}
      */
     private void isDeterministic() throws FSAException {
-        for (HashMap<String, HashSet> transition : this.directedGraph.values()) {
+        for (HashMap<String, HashSet<String>> transition : this.directedGraph.values()) {
             for (HashSet<String> states : transition.values()) {
                 if (states.size() > 1) {
                     throw new FSAException(Errors.E5.getValue());
@@ -324,7 +322,7 @@ class FSA {
     /**
      * Checks which states are joint.
      *
-     * @return array with visited states
+     * @return List with visited states
      */
     private ArrayList<String> recursiveSearchInUndirectedGraph(String start, ArrayList<String> visited) {
         for (String state : this.undirectedGraph.get(start)) {
@@ -344,27 +342,27 @@ class FSA {
 
             for (int j = 0; j < this.states.size(); j++) {
                 String newState = this.states.get(j);
-                String regExp = "";
+                StringBuilder regExp = new StringBuilder();
 
                 for (String[] trans : this.transitions) {
                     if (trans[0].equals(state) && trans[2].equals(newState)) {
-                        regExp += trans[1] + "|";
+                        regExp.append(trans[1]).append("|");
                     }
                 }
 
                 if (state.equals(newState)) {
-                    regExp += "eps";
+                    regExp.append("eps");
                 }
 
-                if (regExp.equals("")) {
-                    regExp = "{}";
+                if (regExp.toString().equals("")) {
+                    regExp = new StringBuilder("{}");
                 }
 
                 if (regExp.charAt(regExp.length() - 1) == '|') {
-                    regExp = regExp.substring(0, regExp.length() - 1);
+                    regExp = new StringBuilder(regExp.substring(0, regExp.length() - 1));
                 }
 
-                initRegExp[i][j] = regExp;
+                initRegExp[i][j] = regExp.toString();
             }
         }
 
@@ -400,13 +398,13 @@ class FSA {
             regExp = newRegExp;
         }
 
-        String resultNewRegExp = "";
+        StringBuilder resultNewRegExp = new StringBuilder();
         for (int i : finalStatesIndices) {
-            resultNewRegExp += regExp[0][i] + "|";
+            resultNewRegExp.append(regExp[0][i]).append("|");
         }
 
         String ans = "";
-        if (resultNewRegExp.equals("")) {
+        if (resultNewRegExp.toString().equals("")) {
             ans = "{}";
         } else {
             ans = resultNewRegExp.substring(0, resultNewRegExp.length() - 1);
@@ -419,12 +417,6 @@ class FSA {
  * The {@link Exception} for all FSA errors.
  */
 class FSAException extends Exception {
-    /**
-     * Instantiates a new FSA exception.
-     */
-    FSAException() {
-        super();
-    }
 
     /**
      * Instantiates a new FSA exception.
@@ -463,7 +455,7 @@ enum Errors {
      */
     E5("E5: FSA is nondeterministic");
 
-    private String value;
+    private final String value;
 
     Errors(String value) {
         this.value = value;
