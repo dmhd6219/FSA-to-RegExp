@@ -1,4 +1,5 @@
 // Sviatoslav Sviatkin CS-05
+
 import java.io.*;
 import java.util.*;
 
@@ -10,7 +11,7 @@ public class Main {
      * The entry point of application.
      *
      * @param args the input arguments
-     * @throws IOException  the io exception
+     * @throws IOException the io exception
      */
     public static void main(String[] args) throws IOException {
         BufferedReader bf = new BufferedReader(new FileReader("fsa.txt"));
@@ -23,21 +24,7 @@ public class Main {
 
         try {
             FSA fsa = new FSA(s);
-            if (fsa.complete) {
-                bw.write(Messages.complete.getValue());
-                bw.write("\n");
-            } else {
-                bw.write(Messages.incomplete.getValue());
-                bw.write("\n");
-            }
 
-            if (!fsa.warnings.isEmpty()) {
-                bw.write("Warning:\n");
-                for (String w : fsa.warnings) {
-                    bw.write(w);
-                    bw.write("\n");
-                }
-            }
         } catch (FSAException e) {
             bw.write("Error:\n");
             bw.write(e.getMessage());
@@ -73,10 +60,7 @@ class FSA {
      * Array with Transitions.
      */
     ArrayList<String[]> transitions = new ArrayList<>();
-    /**
-     * The Warnings.
-     */
-    HashSet<String> warnings = new HashSet<>();
+
     /**
      * The Undirected graph.
      * key : state, value : child states
@@ -87,14 +71,7 @@ class FSA {
      * key : state, value : {key : transition, value : child states}
      */
     HashMap<String, HashMap<String, HashSet>> directedGraph = new HashMap<>();
-    /**
-     * Contains {@code true} if this {@link FSA} is deterministic, otherwise {@code false}.
-     */
-    boolean deterministic = true;
-    /**
-     * Contains {@code true} if this {@link FSA} is complete, otherwise {@code false}.
-     */
-    boolean complete = true;
+
 
     /**
      * Instantiates a new FSA.
@@ -105,10 +82,8 @@ class FSA {
     FSA(ArrayList<String> data) throws FSAException {
         processData(data);
 
-        allStatesReachable();
         isDisjoint();
         isDeterministic();
-        isComplete();
     }
 
     /**
@@ -150,21 +125,22 @@ class FSA {
      */
     private void processStates(String s) throws FSAException {
         if (!s.startsWith("states=[") || !s.endsWith("]")) {
-            throw new FSAException(Messages.E5.getValue());
+            throw new FSAException(Errors.E0.getValue());
         }
 
         String[] states = s.substring(8, s.length() - 1).split(",");
         for (String state : states) {
-            if (state.length() == 0){
+            if (state.length() == 0) {
                 continue;
             }
 
             if (!FSA.isGoodStateName(state)) {
-                throw new FSAException(Messages.E5.getValue());
+                throw new FSAException(Errors.E0.getValue());
             }
             this.states.add(state);
         }
     }
+
     /**
      * Handles input string with {@code alphabet}.
      *
@@ -173,17 +149,17 @@ class FSA {
      */
     private void processAlphas(String s) throws FSAException {
         if (!s.startsWith("alpha=[") || !s.endsWith("]")) {
-            throw new FSAException(Messages.E5.getValue());
+            throw new FSAException(Errors.E0.getValue());
         }
 
         String[] alphas = s.substring(7, s.length() - 1).split(",");
         for (String alpha : alphas) {
-            if (alpha.length() == 0){
+            if (alpha.length() == 0) {
                 continue;
             }
 
             if (!FSA.isGoodAlphaName(alpha)) {
-                throw new FSAException(Messages.E5.getValue());
+                throw new FSAException(Errors.E0.getValue());
             }
             this.alphabet.add(alpha);
         }
@@ -197,26 +173,26 @@ class FSA {
      */
     private void processInitState(String s) throws FSAException {
         if (!s.startsWith("init.st=[") || !s.endsWith("]")) {
-            throw new FSAException(Messages.E5.getValue());
+            throw new FSAException(Errors.E0.getValue());
         }
 
         String[] initStates = s.substring(9, s.length() - 1).split(",");
 
         for (String state : initStates) {
-            if (state.length() == 0){
+            if (state.length() == 0) {
                 continue;
             }
             if (!this.states.contains(state)) {
-                throw new FSAException(Messages.E1.getValue().formatted(state));
+                throw new FSAException(Errors.E1.getValue().formatted(state));
             }
             this.initialStates.add(state);
         }
 
         if (this.initialStates.size() < 1) {
-            throw new FSAException(Messages.E4.getValue());
+            throw new FSAException(Errors.E4.getValue());
         }
         if (this.initialStates.size() > 1) {
-            throw new FSAException(Messages.E5.getValue());
+            throw new FSAException(Errors.E0.getValue());
         }
     }
 
@@ -228,7 +204,7 @@ class FSA {
      */
     private void processFinalState(String s) throws FSAException {
         if (!s.startsWith("fin.st=[") || !s.endsWith("]")) {
-            throw new FSAException(Messages.E5.getValue());
+            throw new FSAException(Errors.E0.getValue());
         }
 
         String[] finalStates = s.substring(8, s.length() - 1).split(",");
@@ -237,13 +213,9 @@ class FSA {
                 continue;
             }
             if (!this.states.contains(state)) {
-                throw new FSAException(Messages.E1.getValue().formatted(state));
+                throw new FSAException(Errors.E1.getValue().formatted(state));
             }
             this.finalStates.add(state);
-        }
-
-        if (this.finalStates.size() < 1) {
-            this.warnings.add(Messages.W1.getValue());
         }
     }
 
@@ -255,28 +227,28 @@ class FSA {
      */
     private void processTransitions(String s) throws FSAException {
         if (!s.startsWith("trans=[") || !s.endsWith("]")) {
-            throw new FSAException(Messages.E5.getValue());
+            throw new FSAException(Errors.E0.getValue());
         }
 
         String[] transitions = s.substring(7, s.length() - 1).split(",");
         for (String trans : transitions) {
-            if (trans.length() == 0){
+            if (trans.length() == 0) {
                 continue;
             }
             String[] transition = trans.split(">");
 
             if (!this.states.contains(transition[0])) {
-                throw new FSAException(Messages.E1.getValue().formatted(transition[0]));
+                throw new FSAException(Errors.E1.getValue().formatted(transition[0]));
             }
             if (!this.alphabet.contains(transition[1])) {
-                throw new FSAException(Messages.E3.getValue().formatted(transition[1]));
+                throw new FSAException(Errors.E3.getValue().formatted(transition[1]));
             }
             if (!this.states.contains(transition[2])) {
-                throw new FSAException(Messages.E1.getValue().formatted(transition[2]));
+                throw new FSAException(Errors.E1.getValue().formatted(transition[2]));
             }
 
             if (transition.length != 3) {
-                throw new FSAException(Messages.E5.getValue());
+                throw new FSAException(Errors.E0.getValue());
             }
             this.transitions.add(transition);
         }
@@ -318,25 +290,14 @@ class FSA {
         return true;
     }
 
-    /**
-     * Checks if all states of this {@link FSA} are reachable from initial state.
-     *
-     */
-    private void allStatesReachable() {
-        ArrayList<String> visited = recursiveSearchInDirectedGraph(this.initialStates.get(0), new ArrayList<>());
-        if (visited.size() < this.states.size()) {
-            warnings.add(Messages.W2.getValue());
-        }
-    }
 
     /**
      * Checks if this {@link FSA} has some disjoint states.
-     *
      */
     private void isDisjoint() throws FSAException {
         ArrayList<String> visited = recursiveSearchInUndirectedGraph(this.initialStates.get(0), new ArrayList<>());
         if (visited.size() < this.states.size()) {
-            throw new FSAException(Messages.E2.getValue());
+            throw new FSAException(Errors.E2.getValue());
         }
     }
 
@@ -345,35 +306,14 @@ class FSA {
      *
      * @return {@code true} if this {@link FSA} is deterministic, otherwise {@code false}
      */
-    private boolean isDeterministic() {
+    private void isDeterministic() throws FSAException {
         for (HashMap<String, HashSet> transition : this.directedGraph.values()) {
             for (HashSet<String> states : transition.values()) {
                 if (states.size() > 1) {
-                    this.deterministic = false;
-                    this.warnings.add(Messages.W3.getValue());
+                    throw new FSAException(Errors.E5.getValue());
                 }
             }
         }
-        return this.deterministic;
-    }
-
-    /**
-     * Checks if this {@link FSA} is complete.
-     *
-     * @return {@code true} if this {@link FSA} is complete, otherwise {@code false}
-     */
-    private boolean isComplete() {
-        if (!isDeterministic()){
-            this.complete = false;
-        }
-        for (HashMap<String, HashSet> transition : this.directedGraph.values()) {
-            for (HashSet<String> states : transition.values()){
-                if (states.size() == 0){
-                    this.complete = false;
-                }
-            }
-        }
-        return this.complete;
     }
 
 
@@ -392,24 +332,46 @@ class FSA {
         return visited;
     }
 
-    /**
-     * Checks which states are reachable from initial state.
-     *
-     * @return array with visited states
-     */
-    private ArrayList<String> recursiveSearchInDirectedGraph(String start, ArrayList<String> visited) {
-        for (HashSet<String> states: this.directedGraph.get(start).values()){
-            for (String state : states){
-                if (!visited.contains(state)) {
-                    visited.add(state);
-                    recursiveSearchInDirectedGraph(state, visited);
+    private ArrayList<ArrayList<String>> getInitialRegExp(){
+        ArrayList<ArrayList<String>> initRegExp = new ArrayList<>(this.states.size());
+
+        for (int i = 0; i < this.states.size(); i++){
+            String state = this.states.get(i);
+
+            for (int j = 0; j < this.states.size(); j++){
+                String newState = this.states.get(j);
+                String regExp = "";
+
+                for (String[] trans : this.transitions){
+                    if (trans[0].equals(state) && trans[2].equals(newState)){
+                        regExp += trans[1] + "|";
+                    }
                 }
+
+                if (state.equals(newState)){
+                    regExp += "eps";
+                }
+
+                if (regExp.equals("")){
+                    regExp = "{}";
+                }
+
+                if (regExp.charAt(regExp.length() - 1) == '|'){
+                    regExp = regExp.substring(0, regExp.length() - 1);
+                }
+
+                initRegExp.get(i).add(j, regExp);
             }
         }
-        return visited;
 
+        return initRegExp;
+    }
+
+    public void toRegExp(){
+        ArrayList<ArrayList<String>> regExp = this.getInitialRegExp();
     }
 }
+
 /**
  * The {@link Exception} for all FSA errors.
  */
@@ -435,7 +397,8 @@ class FSAException extends Exception {
 /**
  * Messages for FSA.
  */
-enum Messages{
+enum Errors {
+    E0("E0: Input file is malformed"),
     /**
      * The Error #1.
      */
@@ -455,30 +418,11 @@ enum Messages{
     /**
      * The Error #5.
      */
-    E5("E5: Input file is malformed"),
-    /**
-     * The Warning #1.
-     */
-    W1("W1: Accepting state is not defined"),
-    /**
-     * The Warning #2.
-     */
-    W2("W2: Some states are not reachable from the initial state"),
-    /**
-     * The Warning #3.
-     */
-    W3("W3: FSA is nondeterministic"),
-    /**
-     * Complete message.
-     */
-    complete("FSA is complete"),
-    /**
-     * Incomplete message.
-     */
-    incomplete("FSA is incomplete");
+    E5("E5: FSA is nondeterministic");
 
     private String value;
-    Messages (String value){
+
+    Errors(String value) {
         this.value = value;
     }
 
@@ -487,7 +431,7 @@ enum Messages{
      *
      * @return the string
      */
-    public String getValue(){
+    public String getValue() {
         return this.value;
     }
 }
