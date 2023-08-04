@@ -1,4 +1,5 @@
 # FSA-to-RegExp
+Was created as homework for Theoretical Computer Science course at Innopolis University.
 
 ## Description
 
